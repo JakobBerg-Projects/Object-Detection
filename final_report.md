@@ -36,12 +36,12 @@ The total loss is `α·Lₐ + β·L_b + γ·L_c`, with α = β = γ = 1.0.
 
 Four architectures were compared:
 
-| Model    | Conv layers (filters, kernel) | FC layers       | Dropout | Parameters (approx.) |
-|----------|-------------------------------|-----------------|---------|----------------------|
-| Light    | (4,3), (8,3)                  | [64]            | 0.0     | ~65K                 |
-| Standard | (6,5), (16,5)                 | [120, 84]       | 0.0     | ~170K                |
-| Deep     | (32,3), (64,3), (128,3)       | [512, 256]      | 0.5     | ~2.5M                |
-| Wide     | (32,5), (64,5)                | [1024, 512, 256]| 0.3     | ~5M                  |
+| Model    | Conv layers (filters, kernel) | FC layers       | Dropout | 
+|----------|-------------------------------|-----------------|---------|
+| Light    | (4,3), (8,3)                  | [64]            | 0.0     |
+| Standard | (6,5), (16,5)                 | [120, 84]       | 0.0     | 
+| Deep     | (32,3), (64,3), (128,3)       | [512, 256]      | 0.5     |
+| Wide     | (32,5), (64,5)                | [1024, 512, 256]| 0.3     | 
 
 All models use MaxPool2d (2×2) after each conv block and output 15 values (1 + 4 + 10).
 
