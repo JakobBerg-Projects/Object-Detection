@@ -372,7 +372,7 @@ def pred_vs_actual(dataset, pred, i, pc_has_sigmoid=False, display_ds=None):
 # # show predictions
 
 # %%
-def show_samples(model, ds, preprocessor, n=7, device="cpu", display_ds=None, save_path=None):
+def show_predictions(model, ds, preprocessor, n=7, device="cpu", display_ds=None, save_path=None):
     model.eval()
 
     images = ds.tensors[0][:n].to(device)
@@ -405,11 +405,11 @@ def show_samples(model, ds, preprocessor, n=7, device="cpu", display_ds=None, sa
     plt.savefig(save_path, bbox_inches="tight")
     plt.show()
 
-show_samples(best_model, norm_val, lambda x: x.to(device), n=16, device=device, display_ds=val, save_path="figures/validation_prediction_localization.png")
+show_predictions(best_model, norm_val, lambda x: x.to(device), n=16, device=device, display_ds=val, save_path="figures/validation_prediction_localization.png")
 
 
 # %%
-show_samples(best_model, norm_test, lambda x: x.to(device), n=16, device=device, display_ds=test, save_path="figures/test_prediction_localization.png")
+show_predictions(best_model, norm_test, lambda x: x.to(device), n=16, device=device, display_ds=test, save_path="figures/test_prediction_localization.png")
 
 # %%
 test_loader = torch.utils.data.DataLoader(norm_test, batch_size=64, shuffle=False, num_workers=0)
