@@ -14,6 +14,11 @@ Jakob:
 
 ## Introduction
 
+In this project, we train convolutional neural networks (CNNs) to solve two related computer vision tasks: object localization and object detection, using an augmented version of the MNIST dataset. The images are 48×60 pixels and contain digits that are randomly positioned, slightly rotated, resized, and placed on a noisy background.
+In the object localization task, we assume at most one digit per image. The goal is to both classify the digit and predict a bounding box around it. We extend a standard image classification network by adding outputs for the bounding box coordinates and an object presence score, and define a custom loss function combining detection, localization, and classification losses.
+In the object detection task, we generalize this to images containing multiple digits. We divide each image into a grid of cells and treat each cell as an independent localization problem. This requires a fully convolutional architecture and additional data preprocessing to convert bounding box coordinates into cell-local coordinates.
+For both tasks, we experiment with several model architectures and hyperparameter configurations, select the best-performing model based on a combination of accuracy and IoU, and evaluate it on the test set.
+
 ## Dataset overview and analysis
 
 ### Object Localization
