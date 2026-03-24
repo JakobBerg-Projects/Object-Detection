@@ -102,7 +102,6 @@ All three models are trained under the same four hyperparameter configurations (
 | Lightweight — LowerLR | 0.2782 | 0.7063 | 0.1532 |
 | Lightweight — SmallBatch | 0.2317 | 0.6335 | 0.0921 |
 | **Best model (test set)** | **0.4709** | **0.9165** | **0.4395** |
-good
 
 #### Training Curves
 
@@ -131,16 +130,20 @@ Detections are visualised with **green** boxes for ground truth and **red** boxe
 
 ### Discussion
 
-<!-- Fill in after results are available. Suggested points to cover: -->
-<!-- - Which model architecture performed best and why (capacity vs. regularisation) -->
-<!-- - Effect of weight decay and learning rate on convergence and generalisation -->
-<!-- - Qualitative observations from the bounding box visualisations -->
-<!-- - Common failure modes: missed detections, false positives, localisation errors -->
-<!-- - Grid resolution limitation: one object per cell means densely packed objects may be missed -->
-<!-- - Whether the lightweight model offers a practical speed/accuracy trade-off -->
+**Architecture comparison.** ResNet clearly outperforms both FullyConv and Lightweight across every configuration. The best ResNet run (mAP 0.48) is about 0.15 mAP higher than the best FullyConv run (mAP 0.33). The residual skip connections help gradients flow more easily during training, which lets the model learn better features with only 128 final channels compared to FullyConv's 256. Lightweight consistently ranks last. Even though depthwise separable convolutions use fewer parameters, the reduced capacity appears to be a real bottleneck when detecting small objects in noisy images. The parameter savings do not result in a useful speed vs. accuracy trade-off here.
+
+**Effect of weight decay and learning rate.** Weight decay has the strongest effect on performance. Removing it from the best ResNet configuration (lr=0.001) drops mAP from 0.48 to 0.37. This drop is larger than any gain from changing the learning rate, which suggests the model overfits somewhat without regularisation. Among learning rates, 0.001 works best for ResNet. Reducing to 0.0005 costs about 0.02 mAP, and 0.0001 with a smaller batch costs about 0.08 mAP. The low learning rate likely does not converge fully in 20 epochs, and extending to 30 epochs does not close the gap.
+
+**mAP@50 vs. mAP@75.** All models score much higher on mAP@50 than mAP@75 (for example, 0.93 vs. 0.44 for the best run). This means the models reliably find objects and predict the correct class, but their bounding boxes are not very precise. This is expected because the 2x3 output grid is quite coarse: each cell covers roughly 30x24 pixels of the 60x48 image, so fine-grained box regression within a cell is difficult. Improving localisation precision would likely require a finer grid or anchor-based predictions.
+
+**Training dynamics.** All models converge quickly within the first 5 epochs. Training and validation loss track each other closely throughout, with no clear overfitting. The dataset of roughly 27K training images is large enough relative to model size. The learning rate scheduler reduces the rate in later epochs, which can be seen as small drops in the loss curves. For ResNet, running 30 epochs instead of 20 did not improve mAP meaningfully, so the longer runs appear unnecessary.
+
+**Qualitative observations.** Looking at the bounding box visualisations, the model gets the class right most of the time with high confidence (usually 0.97 or above). Predicted boxes are close to the ground truth in most cases. The most common error is a slight mismatch in box size or position, especially for narrow diagonal objects where the aspect ratio is harder to predict. Images with two objects are generally handled well, with each object detected independently in its grid cell. Errors tend to happen when an object is near a cell boundary, where the cell assignment is less clear.
+
+**Grid resolution limitation.** The 2x3 grid can predict at most one object per cell and six objects per image. For this dataset (average 1.27 objects per image, maximum 4), this is not a problem in practice. However, if two objects fall in the same cell, the second one is silently dropped during label encoding. A finer grid or multi-anchor approach would be needed for denser scenes.
 
 ---
 
 ## Conclusion
 
-<!-- Summarise the best configuration, final test mAP, and key takeaways from the detection task -->
+The best configuration, ResNetDetector with lr=0.001, weight decay 1e-4, batch size 64, and 20 epochs, achieves mAP 0.47, mAP@50 0.92, and mAP@75 0.44 on the held-out test set. This is very close to the validation performance (mAP 0.48), showing the model generalises well. The main findings are: residual connections give the largest improvement in architecture choice; weight decay is the most important regularisation setting; and the high mAP@50 shows the model detects and classifies reliably, while the lower mAP@75 shows that tighter bounding box precision is the main remaining weakness, limited by the coarse 2x3 output grid.
