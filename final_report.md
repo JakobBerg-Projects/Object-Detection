@@ -4,7 +4,7 @@
 
 
 ### Division of tasks:
-We worked togheter on all of the tasks and never did one task alone. Below is a basic distrobution of the workflow on who tok the most charge on the different tasks. Toghether we discussed how we would go about traning the models and what approaches we would use throughout the project. Examples of this would be: Which hyperparameters to search and how thouroghly we would search them, what models to test and how we would build our methods and helpmethods.
+We worked Together on all of the tasks and never did one task alone. Below is a basic distribution of the workflow on who tok the most charge on the different tasks. Together we discussed how we would go about training the models and what approaches we would use throughout the project. Examples of this would be: Which hyperparameters to search and how thouroghly we would search them, what models to test and how we would build our methods and helpmethods.
 
 Tobias:
 * Object localization, model structures, hyperparametertuning, image-processing
@@ -12,7 +12,16 @@ Tobias:
 Jakob:
 * Object Detection, training loops, visualization
 
+## Disclosure of implementation: 
+
+When working together on this project, we mostly worked alongside each other in pairs, with some work being done seperatly. The libraries we used were mainly pytorch, torchvision, matplotlib and numpy. We also used smaller libraries like math and copy. Matplotlib was used for visualizations, while the torchlibraries were used for the main machine learning tasks. Numpy was used for some matrix operations. 
+
 ## Introduction
+
+In this project, we train convolutional neural networks (CNNs) to solve two related computer vision tasks: object localization and object detection, using an augmented version of the MNIST dataset. The images are 48×60 pixels and contain digits that are randomly positioned, slightly rotated, resized, and placed on a noisy background.
+In the object localization task, we assume at most one digit per image. The goal is to both classify the digit and predict a bounding box around it. We extend a standard image classification network by adding outputs for the bounding box coordinates and an object presence score, and define a custom loss function combining detection, localization, and classification losses.
+In the object detection task, we generalize this to images containing multiple digits. We divide each image into a grid of cells and treat each cell as an independent localization problem. This requires a fully convolutional architecture and additional data preprocessing to convert bounding box coordinates into cell-local coordinates.
+For both tasks, we experiment with several model architectures and hyperparameter configurations, select the best-performing model based on a combination of accuracy and IoU, and evaluate it on the test set.
 
 ## Dataset overview and analysis
 
@@ -129,7 +138,7 @@ The total loss is `L_a + L_b + L_c`.
 
 **Baseline:** The light model with the learning rate of 0.01 and no weight decay is our simplest model and wil act as out baseline
 
-**Training.** All models were trained with SGD (momentum=0.9), batch size 64, and early stopping with patience=5, restoring the best checkpoint by validation performance. The performance metric is defined as `0.5 × (accuracy + mean IoU)`, where accuracy counts a prediction as correct only if the object is detected *and* the digit class is correct. We experimentet with different values on: net depth, net width, learning rate, weight decay, and droupout rates.
+**Training.** All models were trained with SGD (momentum=0.9), batch size 64, and early stopping with patience=5, restoring the best checkpoint by validation performance. The performance metric is defined as `0.5 × (accuracy + mean IoU)`, where accuracy counts a prediction as correct only if the object is detected *and* the digit class is correct. We experimented with different values on: net depth, net width, learning rate, weight decay, and dropout rates.
 
 **Dataset.** The training set contains 59,400 samples, validation 6,600, and test 11,000. Approximately 9.1% of samples have no object (`pc=0`); the remainder are roughly balanced across digits 0–9, with digit 1 slightly overrepresented (~19%).
 
@@ -382,6 +391,6 @@ Detections are visualised with **green** boxes for ground truth and **red** boxe
 
 The best configuration, ResNetDetector with lr=0.001, no weight decay, batch size 64, and 20 epochs, achieves mAP 0.51, mAP@50 0.94, and mAP@75 0.51 on the held-out test set. This is very close to the validation performance (mAP 0.51), showing the model generalises well. The main findings are: residual connections give the largest improvement in architecture choice; a learning rate of 0.001 is the most important hyperparameter for strong performance; and the high mAP@50 shows the model detects and classifies reliably, while the lower mAP@75 shows that tighter bounding box precision is the main remaining weakness, limited by the coarse 2x3 output grid.
 
-## Diclosure of AI
+## Disclosure of AI
 
 The service ChatGPT and Claude has been used for language editing and or improvements to the text in the report, and for resolving bugs in the training loop. Claude was also used to assist in giving templates for model structures in the Object Detection task. The final result was fact-checked and somewhat rewritten by its authors.
