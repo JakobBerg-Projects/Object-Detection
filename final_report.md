@@ -1,4 +1,16 @@
-# Object localization and Detection report
+
+<h1 align="center">Report Object localization and Detection</h1> 
+<h3 align="center">Project by Jakob Berg & Tobias Munch</h3> 
+
+
+### Division of tasks:
+We worked togheter on all of the tasks and never did one task alone. Below is a basic distrobution of the workflow on who tok the most charge on the different tasks. Toghether we discussed how we would go about traning the models and what approaches we would use throughout the project. Examples of this would be: Which hyperparameters to search and how thouroghly we would search them, what models to test and how we would build our methods and helpmethods.
+
+Tobias:
+* Object localization, model structures, hyperparametertuning, image-processing
+
+Jakob:
+* Object Detection, training loops, visualization
 
 ## Introduction
 
@@ -191,3 +203,6 @@ The flat feature sizes after the convolutional stack (computed automatically via
 
 ## Conclusion
 
+## Diclosure of AI
+
+The service ChatGPT and Claude has been used for language editing and or improvements to the text in the report, and for resolving bugs in the training loop. Claude was also used to assist in giving templates for model structures in the Object Detection task. The final result was fact-checked and somewhat rewritten by its authors.
