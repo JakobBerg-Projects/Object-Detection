@@ -184,7 +184,7 @@ Our best model was a wide network with a learning rate of 0.01, weight decay of 
 ![Predicted Boxes](figures/train_prediction_localization.png)
 
 ### Validation Predictions 
-![Predicted Boxes](figures/validation_prediction_localization.png)¨
+![Predicted Boxes](figures/validation_prediction_localization.png)
 
 ### Test Predictions 
 ![Predicted Boxes](figures/test_prediction_localization.png)
@@ -216,7 +216,13 @@ Our best model was a wide network with a learning rate of 0.01, weight decay of 
 
 **Normalization.** Global normalization (single mean/std over all pixels) was used rather than per-channel normalization. Since images are single-channel, this is equivalent, but using per-feature normalization or 2D spatial normalization could be explored for further improvement.
 
-## Conclution 
+**Failed approach.** We also tried a model with intermediate complexity between the Light and Deep/Wide architectures, but it performed significantly worse than all three other models. We suspect it fell in an awkward middle ground, too few parameters to learn the multi-task problem well, but enough to overfit without the regularization (dropout) used in the larger models. It was discarded early to save processing time.
+
+**Are the results satisfying?** A random baseline would score roughly 10% accuracy (1 in 10 digit classes) and near-zero IoU, giving a combined performance close to 0.05. Our best model achieves 0.69, which is a large improvement over random chance. The accuracy of 0.89 shows the model classifies digits well, while the IoU of 0.49 indicates there is room for improvement in bounding box precision. Overall, the results are reasonable for relatively simple architectures trained without data augmentation.
+
+**Given more time.** We would explore a broader hyperparameter search, particularly trying more learning rates and adding data augmentation (random shifts, rotations, and noise) to improve generalization. We would also experiment with weighting the three loss terms differently, as the current equal weighting may not be optimal. Finally, adding batch normalization to the convolutional layers could help stabilize training and potentially improve IoU.
+
+## Conclusion
 Our final model got a test performance of 0.6869. This is quite good in referance to how our model did on the validation data. We did expect a larger decrease from the validation data to the test data. This small decrease in performance to a new dataset is a sign that our model generalizes well to new data. We might have been able to get even better values if we experimentet with even more hyperparameter values. This was limited by our time and available resources. 
 
 
@@ -327,10 +333,11 @@ All three models are trained under the same four hyperparameter configurations (
 
 The **best model** is **ResNetDetector with the Baseline hyperparameters** (lr=1e-3, no weight decay, batch size 64, 20 epochs), which achieves the highest validation mAP of 0.5122 across all 12 runs. This model is then re-evaluated on the held-out test set, yielding mAP 0.5123, confirming that the validation score was not inflated by hyperparameter overfitting.
 
-#### Training Curves
+**Why mAP over accuracy/IoU?** One could evaluate object detection by applying the localization metrics (accuracy and IoU) to each grid cell independently. However, this makes the performance measure grid-dependent and therefore model-dependent, which prevents fair comparison across architectures with different grid resolutions. Mean average precision (mAP) avoids this pitfall: predictions are first converted from local cell coordinates back to global image coordinates, and then evaluated against ground-truth boxes regardless of how the grid was defined. This makes mAP a grid-independent, model-independent metric suitable for comparing different detectors.
 
-<!-- Insert: 3×4 grid of train/val loss plots (one subplot per model × hyperparameter config) -->
-<!-- Figure title: "Training & Validation Loss per Model and Hyperparameter Configuration" -->
+**Additional metrics (test set).** For completeness, the best model also achieves a per-cell accuracy of 0.9653, IoU of 0.7715, and mean accuracy-IoU of 0.8684 on the test set. These numbers are high because per-cell accuracy is dominated by the many empty cells that are trivially classified as background. While informative as a sanity check, these grid-dependent metrics are not used for model selection.
+
+#### Training Curves
 
 ![Training and Validation Loss](figures/loss_curves.png)
 
@@ -341,19 +348,13 @@ Detections are visualised with **green** boxes for ground truth and **red** boxe
 
 **Sanity Check: Training samples (best model):**
 
-<!-- Insert: show_detection_samples output — best model on val_norm, n=4 -->
-
 ![Validation detections](figures/train_detections.png)
 
 **Validation samples (best model):**
 
-<!-- Insert: show_detection_samples output — best model on val_norm, n=4 -->
-
 ![Validation detections](figures/val_detections.png)
 
 **Test samples (best model):**
-
-<!-- Insert: show_detection_samples output — best model on test_norm, n=16 -->
 
 ![Test detections](figures/test_detections.png)
 
@@ -373,7 +374,9 @@ Detections are visualised with **green** boxes for ground truth and **red** boxe
 
 **Grid resolution limitation.** The 2x3 grid can predict at most one object per cell and six objects per image. For this dataset (average 1.27 objects per image, maximum 4), this is not a problem in practice. However, if two objects fall in the same cell, the second one is silently dropped during label encoding. A finer grid or multi-anchor approach would be needed for denser scenes.
 
----
+**Are the results satisfying?** A random detector would produce boxes and class predictions with no correlation to the actual objects, yielding an mAP near zero. Our best model achieves mAP 0.51 and mAP@50 0.94, meaning it detects and classifies nearly all objects correctly at a loose IoU threshold. This is a satisfying result given the simplicity of our grid-based approach. The main weakness is bounding box precision (mAP@75 of 0.51), which is expected given the coarse 2x3 grid.
+
+**Given more time.** We would try a finer output grid (e.g. 4×5) to improve bounding box precision, which is the main weakness shown by the gap between mAP@50 and mAP@75. We would also experiment with anchor boxes to handle objects of varying aspect ratios better, and run a more exhaustive hyperparameter search with more learning rate and weight decay combinations. Adding data augmentation could also help the model generalize to more varied object positions and scales.
 
 ## Conclusion
 
