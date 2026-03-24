@@ -306,35 +306,27 @@ print(f"LightweightDetector params: {sum(p.numel() for p in model_light.paramete
 def detection_loss(predictions, targets):
     """
     Detection loss: sum over grid cells of L_localization[h, w].
-    L_localization = L_A (objectness) + L_B (box coords) + L_C (classification)
     predictions: (B, 7, Hout, Wout) - raw model output
     targets: (B, Hout, Wout, 6) - [pc, x, y, w, h, class]
     """
     pred = predictions.permute(0, 2, 3, 1)  # (B, Hout, Wout, 7)
 
-    obj_mask   = targets[..., 0] == 1
-    noobj_mask = targets[..., 0] == 0
+    obj_mask = targets[..., 0] > 0.5
 
-    # L_A: objectness loss (BCE, both object and background cells)
-    obj_loss   = F.binary_cross_entropy_with_logits(pred[..., 0][obj_mask],   targets[..., 0][obj_mask])
-    noobj_loss = F.binary_cross_entropy_with_logits(pred[..., 0][noobj_mask], targets[..., 0][noobj_mask])
+    # LA: detection loss (all cells)
+    det_loss = F.binary_cross_entropy_with_logits(pred[..., 0], targets[..., 0])
 
-    # L_B + L_C: box and class loss (only cells with objects)
-    if obj_mask.sum() > 0:
-        pred_boxes = pred[..., 1:5][obj_mask]
-        pred_xy    = torch.sigmoid(pred_boxes[..., :2])
-        pred_wh    = torch.exp(pred_boxes[..., 2:4])
+    if obj_mask.any():
+        # LB: box coordinate loss (plain MSE, matching localization spec)
+        box_loss = F.mse_loss(pred[..., 1:5][obj_mask], targets[..., 1:5][obj_mask])
 
-        # L_B: box coordinate loss (MSE)
-        box_loss = F.mse_loss(torch.cat([pred_xy, pred_wh], dim=-1), targets[..., 1:5][obj_mask])
-
-        # L_C: classification loss (cross entropy)
+        # LC: classification loss
         class_loss = F.cross_entropy(pred[..., 5:][obj_mask], targets[..., 5][obj_mask].long())
     else:
-        box_loss   = torch.tensor(0.0, device=predictions.device)
+        box_loss = torch.tensor(0.0, device=predictions.device)
         class_loss = torch.tensor(0.0, device=predictions.device)
 
-    return obj_loss + noobj_loss + box_loss + class_loss
+    return det_loss + box_loss + class_loss
 
 # %% [markdown]
 # ## Train
@@ -405,11 +397,6 @@ def train_model(model, train_set, val_set, epochs=20, batch_size=64, lr=1e-3, we
 # %%
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
-def decode_boxes(raw_box):
-    """Apply activations to raw model box output: sigmoid on x,y and exp on w,h."""
-    xy = torch.sigmoid(raw_box[..., :2])
-    wh = torch.exp(raw_box[..., 2:4])
-    return torch.cat([xy, wh], dim=-1)
 
 def get_map_results(model, eval_loader, device):
     '''
@@ -455,7 +442,7 @@ def get_map_results(model, eval_loader, device):
                         pred_label = torch.argmax(class_prop)
                         detect_score = obj_prop * class_prop[pred_label]
                         # decode raw box predictions before converting to global
-                        decoded_box = decode_boxes(cell_output[1:5])
+                        decoded_box = cell_output[1:5]
                         bbox_global = local_to_global(i // 3, i % 3, decoded_box)
                         bbox_xyxy = xywh_to_xyxy(bbox_global)
                         bbox_xyxy = torch.stack(bbox_xyxy)
@@ -509,6 +496,56 @@ def get_map_results(model, eval_loader, device):
     # results is a dict with the mAP results for different IoU thresholds and the overall mAP
     return results        
 
+def detection_accuracy_iou(model, dataloader, device, rows=2, cols=3):
+    """Compute accuracy and IoU for the detection task (global frame)."""
+    model.eval()
+    correct = 0
+    total = 0
+    total_iou = 0.0
+    iou_count = 0
+
+    with torch.no_grad():
+        for images, labels in dataloader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images).permute(0, 2, 3, 1)  # (B, Hout, Wout, 7)
+
+            for b in range(outputs.shape[0]):
+                for r in range(rows):
+                    for c in range(cols):
+                        cell_pred = outputs[b, r, c]
+                        cell_true = labels[b, r, c]
+
+                        pc_true = cell_true[0] > 0.5
+                        if not pc_true:
+                            continue
+
+                        total += 1
+                        pc_pred = torch.sigmoid(cell_pred[0]) > 0.5
+                        class_pred = torch.argmax(cell_pred[5:]).item()
+                        class_true = int(cell_true[5].item())
+
+                        if pc_pred and class_pred == class_true:
+                            correct += 1
+
+                        # IoU in global pixel coords
+                        pred_box = cell_pred[1:5].cpu()
+                        true_box = cell_true[1:5].cpu()
+
+                        pg = local_to_global(r, c, pred_box.tolist())
+                        tg = local_to_global(r, c, true_box.tolist())
+
+                        pred_xyxy = torch.tensor(xywh_to_xyxy(pg)).unsqueeze(0).clamp(min=0)
+                        true_xyxy = torch.tensor(xywh_to_xyxy(tg)).unsqueeze(0).clamp(min=0)
+
+                        iou = box_iou(pred_xyxy, true_xyxy).item()
+                        total_iou += iou
+                        iou_count += 1
+
+    accuracy = correct / total if total > 0 else 0.0
+    mean_iou = total_iou / iou_count if iou_count > 0 else 0.0
+    performance = 0.5 * (accuracy + mean_iou)
+    return accuracy, mean_iou, performance
+    
 def local_to_global(i, j, bb, width=60, height=48, cols=3, rows=2):
     x, y, w, h = bb
     # get the dimensions of a single grid cell
@@ -529,6 +566,8 @@ def xywh_to_xyxy(bb):
     x2 = x_center + w/2
     y2 = y_center + h/2
     return x1, y1, x2, y2   
+
+
 
 # %% [markdown]
 # ## Model selection and evaluation
@@ -578,16 +617,14 @@ for name, make_model in model_factories.items():
             "map_50": res["map_50"],
             "map_75": res["map_75"],
         }
-        print(f"mAP:    {res['map']:.4f}")
-        print(f"mAP@50: {res['map_50']:.4f}")
-        print(f"mAP@75: {res['map_75']:.4f}")
+        print(f"mAP: {res['map']:.4f} | mAP@50: {res['map_50']:.4f} | mAP@75: {res['map_75']:.4f}")
 
 # Summary
 print("\n=== Results Summary ===")
-print(f"{'Run':<45} {'mAP':>8} {'mAP@50':>8} {'mAP@75':>8}")
-print("-" * 71)
+print(f"{'Run':<60} {'mAP':>6} {'mAP50':>6} {'mAP75':>6}")
+print("-" * 80)
 for run_name, r in sorted(results_table.items(), key=lambda x: x[1]["map"], reverse=True):
-    print(f"{run_name:<45} {r['map']:>8.4f} {r['map_50']:>8.4f} {r['map_75']:>8.4f}")
+    print(f"{run_name:<60} {r['map']:>6.4f} {r['map_50']:>6.4f} {r['map_75']:>6.4f}")
 
 best_run = max(results_table, key=lambda k: results_table[k]["map"])
 best_model = results_table[best_run]["trained_model"]
@@ -601,7 +638,7 @@ fig, axes = plt.subplots(len(model_factories), len(hyperparam_grid), figsize=(5 
 
 for i, model_name in enumerate(model_factories):
     for j, hparams in enumerate(hyperparam_grid):
-        run_name = f"{name}_lr{hparams['lr']}_ep{hparams['epochs']}_bs{hparams['batch_size']}_wd{hparams['weight_decay']}"
+        run_name = f"{model_name}_lr{hparams['lr']}_ep{hparams['epochs']}_bs{hparams['batch_size']}_wd{hparams['weight_decay']}"
         r = results_table[run_name]
         ax = axes[i][j]
         ax.plot(r["train_losses"], label="Train")
@@ -622,7 +659,11 @@ plt.show()
 # %%
 test_loader = DataLoader(test_norm, batch_size=64)
 test_res = get_map_results(best_model, test_loader, device)
+test_acc, test_iou, test_perf = detection_accuracy_iou(best_model, test_loader, device)
 print(f"=== Test Set Results ({best_run}) ===")
+print(f"Accuracy:    {test_acc:.4f}")
+print(f"IoU:         {test_iou:.4f}")
+print(f"Performance: {test_perf:.4f}")
 print(f"mAP:    {test_res['map']:.4f}")
 print(f"mAP@50: {test_res['map_50']:.4f}")
 print(f"mAP@75: {test_res['map_75']:.4f}")
@@ -657,9 +698,7 @@ def pred_vs_actual_detection(dataset, preds, i, width=60, height=48, cols=3, row
 
             pc = torch.sigmoid(cell_pred[0]).item()
             if pc > 0.5:
-                xy = torch.sigmoid(cell_pred[1:3])
-                wh = torch.exp(cell_pred[3:5])
-                decoded = torch.cat([xy, wh]).tolist()
+                decoded = cell_pred[1:5].tolist()
                 px, py, pw, ph = local_to_global(r, c, decoded, width, height, cols, rows)
                 x1, y1, x2, y2 = xywh_to_xyxy((px, py, pw, ph))
                 pr_boxes.append([x1, y1, x2, y2])
