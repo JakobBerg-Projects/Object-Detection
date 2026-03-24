@@ -141,16 +141,16 @@ Four architectures were compared:
 
 | Model    | Conv layers (filters, kernel) | FC layers       | Dropout | 
 |----------|-------------------------------|-----------------|---------|
+| baseline | (4,3), (8,3)                  | [64]            | 0.0     |
 | Light    | (4,3), (8,3)                  | [64]            | 0.0     |
-| Standard | (6,5), (16,5)                 | [120, 84]       | 0.0     | 
 | Deep     | (32,3), (64,3), (128,3)       | [512, 256]      | 0.5     |
 | Wide     | (32,5), (64,5)                | [1024, 512, 256]| 0.3     | 
 
 All models use MaxPool2d (2×2) after each conv block and output 15 values (1 + 4 + 10).
 
 The flat feature sizes after the convolutional stack (computed automatically via a dummy forward pass) are:
+- baseline: 1,040
 - Light: 1,040
-- Standard: 1,728
 - Deep: 2,560
 - Wide: 6,912
 
@@ -160,7 +160,7 @@ The flat feature sizes after the convolutional stack (computed automatically via
 
 ![Training Curves](figures/loss_curves_localization.png)
 
-**Training curves:** Looking at the evolution of the traning loss in our models we can see some developments. The loss always decrease as the model gets trained to fit the data better. We can also se how the learning rate impacts how fast the model changes. When its too high, it causes the loss function to fluctuate, oscillate, or diverge, preventing the model from learning (This never happens to our models). A too low value leads to slow, stagnant learning, increasing training time and requiring more iterations. The models with dropout (deep and wide) should also train more slowly but generalize better. 
+**Training curves:** Looking at the evolution of the traning loss in our models we can see some developments. The loss always decreases as the model gets trained to fit the data better. We can also se how the learning rate impacts how fast the model changes. When its too high, it causes the loss function to fluctuate, oscillate, or diverge, preventing the model from learning (This never happens to our models). A too low value leads to slow, stagnant learning, increasing training time and requiring more iterations. The models with dropout (deep and wide) should also train more slowly but generalize better. 
 
 
 
