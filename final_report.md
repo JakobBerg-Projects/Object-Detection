@@ -111,7 +111,7 @@ The task is a multi-output localization problem: given a 48×60 grayscale image,
 - **Bounding box loss (L_b):** Mean squared error on the normalized `(cx, cy, w, h)` coordinates, computed only for positive samples (where an object is present).
 - **Classification loss (L_c):** Cross-entropy on the 10-class digit logits, again only for positive samples.
 
-The total loss is `α·Lₐ + β·L_b + γ·L_c`, with α = β = γ = 1.0.
+The total loss is `Lₐ + L_b + L_c`.
 
 **Normalization.** Input images were normalized using the training set mean and standard deviation (per-dataset, not per-channel), and the same statistics were applied to validation and test sets.
 
@@ -144,19 +144,30 @@ The flat feature sizes after the convolutional stack (computed automatically via
 
 ## Results
 
-*Fill in actual numbers after training completes.*
+**Training curves:** Looking at the evolution of the traningloss in our models we can see some developments. The loss always decrease as the model gets trained to fit the data better. We can also se how the learning rate impacts how fast the model changes. When its too high, it causes the loss function to fluctuate, oscillate, or diverge, preventing the model from learning (This never happens to our models). A too low value leads to slow, stagnant learning, increasing training time and requiring more iterations. The models with dropout (deep and wide) should also train more slowly but generalize better. 
 
-| Model    | Val Accuracy | Val IoU | Val Performance | Test Accuracy | Test IoU | Test Performance |
-|----------|-------------|---------|-----------------|---------------|----------|------------------|
-| Light    | —           | —       | —               | —             | —        | —                |
-| Standard | —           | —       | —               | —             | —        | —                |
-| Deep     | —           | —       | —               | —             | —        | —                |
-| Wide     | —           | —       | —               | —             | —        | —                |
-| **Best** | —           | —       | —               | —             | —        | —                |
 
-*(Training curves and bounding box visualizations should be inserted here as figures.)*
 
-**Training curves:** Loss and validation performance per epoch for each model. Models with dropout (Deep, Wide) are expected to train more slowly but generalize better.
+| Model    | Val Accuracy | Val IoU | Val Performance |
+|----------|-------------|---------|-----------------|
+| Light    | 0.7068      | 0.4193  | 0.5631          | 
+| Deep     | 0.9280      | 0.4497  | 0.6838          | 
+| Wide     | 0.8863      | 0.4843  | 0.6953          | 
+| **Best** | 0.8863      | 0.4843  | 0.6953          | 
+
+
+### About the best model
+Our best model was a wide network with a learning rate of 0.01 and weight decay of 0. 
+
+
+### Test results 
+
+| Model    | Val Accuracy | Val IoU | Val Performance |
+|----------|-------------|---------|-----------------|
+| **Best** |  0.8878     | 0.4860  | 0.6869          | 
+
+
+![Predicted Boxes](figures/validation_prediction_localization.png)
 
 **Bounding box visualizations:** For qualitative assessment, `pred_vs_actual` overlays the ground-truth box (green) and predicted box (red) on the image. Visualizations from train, validation, and test sets illustrate how well the model localizes unseen digits.
 
