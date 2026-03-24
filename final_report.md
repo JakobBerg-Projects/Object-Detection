@@ -12,6 +12,10 @@ Tobias:
 Jakob:
 * Object Detection, training loops, visualization
 
+## Disclosure of implementation: 
+
+When working together on this project, we mostly worked alongside each other in pairs, with some work being done seperatly. The libraries we used were mainly pytorch, torchvision, matplotlib and numpy. We also used smaller libraries like math and copy. Matplotlib was used for visualizations, while the torchlibraries were used for the main machine learning tasks. Numpy was used for some matrix operations. 
+
 ## Introduction
 
 In this project, we train convolutional neural networks (CNNs) to solve two related computer vision tasks: object localization and object detection, using an augmented version of the MNIST dataset. The images are 48×60 pixels and contain digits that are randomly positioned, slightly rotated, resized, and placed on a noisy background.
