@@ -167,11 +167,12 @@ The flat feature sizes after the convolutional stack (computed automatically via
 A table for the best versions of our Light, Deep and Wide nets 
 | Model    | Val Accuracy | Val IoU | Val Performance |
 |----------|-------------|---------|-----------------|
-| Baseline | 0.7068      | 0.4193  | 0.5631          | 
+| Baseline | 0.6933      | 0.4368  | 0.5651          | 
 | Light    | 0.7068      | 0.4193  | 0.5631          | 
 | Deep     | 0.9280      | 0.4497  | 0.6838          | 
 | Wide     | 0.8863      | 0.4843  | 0.6953          | 
 | **Best** | 0.8863      | 0.4843  | 0.6953          | 
+
 
 
 ### About the best model
