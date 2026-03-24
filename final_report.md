@@ -4,7 +4,7 @@
 
 
 ### Division of tasks:
-We worked togheter on all of the tasks and never did one task alone. Below is a basic distrobution of the workflow on who tok the most charge on the different tasks. Toghether we discussed how we would go about traning the models and what approaches we would use throughout the project. Examples of this would be: Which hyperparameters to search and how thouroghly we would search them, what models to test and how we would build our methods and helpmethods.
+We worked Together on all of the tasks and never did one task alone. Below is a basic distribution of the workflow on who tok the most charge on the different tasks. Together we discussed how we would go about training the models and what approaches we would use throughout the project. Examples of this would be: Which hyperparameters to search and how thouroghly we would search them, what models to test and how we would build our methods and helpmethods.
 
 Tobias:
 * Object localization, model structures, hyperparametertuning, image-processing
@@ -134,7 +134,7 @@ The total loss is `L_a + L_b + L_c`.
 
 **Baseline:** The light model with the learning rate of 0.01 and no weight decay is our simplest model and wil act as out baseline
 
-**Training.** All models were trained with SGD (momentum=0.9), batch size 64, and early stopping with patience=5, restoring the best checkpoint by validation performance. The performance metric is defined as `0.5 × (accuracy + mean IoU)`, where accuracy counts a prediction as correct only if the object is detected *and* the digit class is correct. We experimentet with different values on: net depth, net width, learning rate, weight decay, and droupout rates.
+**Training.** All models were trained with SGD (momentum=0.9), batch size 64, and early stopping with patience=5, restoring the best checkpoint by validation performance. The performance metric is defined as `0.5 × (accuracy + mean IoU)`, where accuracy counts a prediction as correct only if the object is detected *and* the digit class is correct. We experimented with different values on: net depth, net width, learning rate, weight decay, and dropout rates.
 
 **Dataset.** The training set contains 59,400 samples, validation 6,600, and test 11,000. Approximately 9.1% of samples have no object (`pc=0`); the remainder are roughly balanced across digits 0–9, with digit 1 slightly overrepresented (~19%).
 
@@ -221,8 +221,8 @@ Our best model was a wide network with a learning rate of 0.01, weight decay of 
 
 **Normalization.** Global normalization (single mean/std over all pixels) was used rather than per-channel normalization. Since images are single-channel, this is equivalent, but using per-feature normalization or 2D spatial normalization could be explored for further improvement.
 
-## Conclution 
-Our final model got a test performance of 0.6869. This is quite good in referance to how our model did on the validation data. We did expect a larger decrease from the validation data to the test data. This small decrease in performance to a new dataset is a sign that our model generalizes well to new data. We might have been able to get even better values if we experimentet with even more hyperparameter values. This was limited by our time and available resources. 
+## Conclusion 
+Our final model got a test performance of 0.6869. This is quite good in referance to how our model did on the validation data. We did expect a larger decrease from the validation data to the test data. This small decrease in performance to a new dataset is a sign that our model generalizes well to new data. We might have been able to get even better values if we experimented with even more hyperparameter values. This was limited by our time and available resources. 
 
 
 # Part 2: Object Detection
@@ -384,6 +384,6 @@ Detections are visualised with **green** boxes for ground truth and **red** boxe
 
 The best configuration, ResNetDetector with lr=0.001, no weight decay, batch size 64, and 20 epochs, achieves mAP 0.51, mAP@50 0.94, and mAP@75 0.51 on the held-out test set. This is very close to the validation performance (mAP 0.51), showing the model generalises well. The main findings are: residual connections give the largest improvement in architecture choice; a learning rate of 0.001 is the most important hyperparameter for strong performance; and the high mAP@50 shows the model detects and classifies reliably, while the lower mAP@75 shows that tighter bounding box precision is the main remaining weakness, limited by the coarse 2x3 output grid.
 
-## Diclosure of AI
+## Disclosure of AI
 
 The service ChatGPT and Claude has been used for language editing and or improvements to the text in the report, and for resolving bugs in the training loop. Claude was also used to assist in giving templates for model structures in the Object Detection task. The final result was fact-checked and somewhat rewritten by its authors.
