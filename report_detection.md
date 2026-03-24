@@ -102,6 +102,7 @@ All three models are trained under the same four hyperparameter configurations (
 | Lightweight — LowerLR | 0.2782 | 0.7063 | 0.1532 |
 | Lightweight — SmallBatch | 0.2317 | 0.6335 | 0.0921 |
 | **Best model (test set)** | **0.4709** | **0.9165** | **0.4395** |
+good
 
 #### Training Curves
 
