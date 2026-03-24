@@ -89,26 +89,26 @@ All three models are trained under the same four hyperparameter configurations (
 
 | Run | mAP | mAP@50 | mAP@75 |
 |-----|-----|--------|--------|
-| FullyConv — Baseline | | | |
-| FullyConv — +WeightDecay | | | |
-| FullyConv — LowerLR | | | |
-| FullyConv — SmallBatch | | | |
-| ResNet — Baseline | | | |
-| ResNet — +WeightDecay | | | |
-| ResNet — LowerLR | | | |
-| ResNet — SmallBatch | | | |
-| Lightweight — Baseline | | | |
-| Lightweight — +WeightDecay | | | |
-| Lightweight — LowerLR | | | |
-| Lightweight — SmallBatch | | | |
-| **Best model (test set)** | | | |
+| FullyConv — Baseline | 0.3017 | 0.7608 | 0.1516 |
+| FullyConv — +WeightDecay | 0.3313 | 0.7697 | 0.2217 |
+| FullyConv — LowerLR | 0.3014 | 0.7279 | 0.1906 |
+| FullyConv — SmallBatch | 0.2901 | 0.7041 | 0.1670 |
+| ResNet — Baseline | 0.3740 | 0.8344 | 0.2754 |
+| ResNet — +WeightDecay | 0.4804 | 0.9275 | 0.4447 |
+| ResNet — LowerLR | 0.4613 | 0.9094 | 0.4323 |
+| ResNet — SmallBatch | 0.4007 | 0.8949 | 0.2782 |
+| Lightweight — Baseline | 0.3022 | 0.7446 | 0.1606 |
+| Lightweight — +WeightDecay | 0.2973 | 0.7237 | 0.1781 |
+| Lightweight — LowerLR | 0.2782 | 0.7063 | 0.1532 |
+| Lightweight — SmallBatch | 0.2317 | 0.6335 | 0.0921 |
+| **Best model (test set)** | **0.4709** | **0.9165** | **0.4395** |
 
 #### Training Curves
 
 <!-- Insert: 3×4 grid of train/val loss plots (one subplot per model × hyperparameter config) -->
 <!-- Figure title: "Training & Validation Loss per Model and Hyperparameter Configuration" -->
 
-![Training and Validation Loss](figures/training_curves.png)
+![Training and Validation Loss](figures/loss_curves.png)
 
 #### Bounding Box Visualisations
 
