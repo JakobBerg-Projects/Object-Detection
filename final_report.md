@@ -160,7 +160,7 @@ The flat feature sizes after the convolutional stack (computed automatically via
 
 ![Training Curves](figures/loss_curves_localization.png)
 
-**Training curves:** Looking at the evolution of the traning loss in our models we can see some developments. The loss always decrease as the model gets trained to fit the data better. We can also se how the learning rate impacts how fast the model changes. When its too high, it causes the loss function to fluctuate, oscillate, or diverge, preventing the model from learning (This never happens to our models). A too low value leads to slow, stagnant learning, increasing training time and requiring more iterations. The models with dropout (deep and wide) should also train more slowly but generalize better. 
+**Training curves:** Looking at the evolution of the traning loss in our models we can see some developments. The loss always decreases as the model gets trained to fit the data better. We can also se how the learning rate impacts how fast the model changes. When its too high, it causes the loss function to fluctuate, oscillate, or diverge, preventing the model from learning (This never happens to our models). A too low value leads to slow, stagnant learning, increasing training time and requiring more iterations. The models with dropout (deep and wide) should also train more slowly but generalize better. 
 
 
 
