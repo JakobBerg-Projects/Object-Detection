@@ -91,7 +91,7 @@ std  = train_images.std()    # scalar std over all pixels and samples
 x_norm = (x - mean) / std   # applied to train, val, and test
 ```
 
-Global (scalar) normalization is used rather than per-channel or per-pixel normalization — since images are single-channel this is equivalent to standardizing the entire pixel distribution. Crucially, the val and test sets are normalized with the training mean and std to avoid data leakage. The original labels (bounding box coordinates and digit classes) are kept as-is and do not require normalization since they are already in a consistent [0, 1] normalized coordinate space.
+Global (scalar) normalization is used rather than per-channel or per-pixel normalization, since images are single-channel this is equivalent to standardizing the entire pixel distribution. Crucially, the val and test sets are normalized with the training mean and std to avoid data leakage. The original labels (bounding box coordinates and digit classes) are kept as-is and do not require normalization since they are already in a consistent [0, 1] normalized coordinate space.
 
 #### Object detection
 
@@ -99,7 +99,7 @@ The detection pipeline adds a label conversion step on top of the same image nor
 
 **Image normalization** is identical: scalar mean and std computed from training images only, applied to all splits.
 
-**Label conversion — list to grid (`convert_to_grid`).** Raw annotations come as variable-length lists of objects per image (each object: `[pc, x, y, w, h, c]` in normalized image coordinates). These are converted to a fixed-size grid tensor of shape `(N, H_out, W_out, 6)` — here `H_out=2, W_out=3` — which divides the image into a 2×3 spatial grid of cells. For each object, the responsible cell is determined by the object's center:
+**Label conversion — list to grid (`convert_to_grid`).** Raw annotations come as variable-length lists of objects per image (each object: `[pc, x, y, w, h, c]` in normalized image coordinates). These are converted to a fixed-size grid tensor of shape `(N, H_out, W_out, 6)`, here `H_out=2, W_out=3`, which divides the image into a 2×3 spatial grid of cells. For each object, the responsible cell is determined by the object's center:
 
 ```
 col = int(x * W_out),  row = int(y * H_out)   # cell index (clamped to grid bounds)
@@ -292,7 +292,7 @@ Input 1×48×60
 Each residual block: `Conv → BN → ReLU → Conv → BN` with an identity skip, followed by ReLU.
 
 #### LightweightDetector
-Uses **depthwise separable convolutions** (MobileNet-style) to reduce the parameter count substantially. A depthwise separable block first applies one filter per input channel (depthwise), then mixes channels with a `1×1` pointwise convolution — achieving similar receptive fields at a fraction of the FLOPs.
+Uses **depthwise separable convolutions** (MobileNet-style) to reduce the parameter count substantially. A depthwise separable block first applies one filter per input channel (depthwise), then mixes channels with a `1×1` pointwise convolution, achieving similar receptive fields at a fraction of the FLOPs.
 
 ```
 Input 1×48×60
@@ -376,7 +376,7 @@ Detections are visualised with **green** boxes for ground truth and **red** boxe
 
 **mAP@50 vs. mAP@75.** All models score much higher on mAP@50 than mAP@75 (for example, 0.94 vs. 0.53 for the best run). This means the models reliably find objects and predict the correct class, but their bounding boxes are not very precise. This is expected because the 2x3 output grid is quite coarse: each cell covers roughly 30x24 pixels of the 60x48 image, so fine-grained box regression within a cell is difficult. Improving localisation precision would likely require a finer grid or anchor-based predictions.
 
-**Training dynamics.** Models with lr=0.001 show the steepest loss reduction in the first 3–5 epochs, but training loss continues to decrease gradually afterward — particularly for ResNet, where the gap between training and validation loss widens through epoch 20. The lower learning rate configurations converge more slowly: the SmallBatch runs (lr=0.0001) are still visibly declining past epoch 15. Validation loss generally stabilises earlier than training loss, and the two track each other reasonably well, with no severe overfitting. The learning rate scheduler reduces the rate in later epochs, visible as small drops in the loss curves. For ResNet, running 30 epochs at lr=0.0005 instead of 20 at lr=0.001 did not improve mAP meaningfully, so the longer runs appear unnecessary.
+**Training dynamics.** Models with lr=0.001 show the steepest loss reduction in the first 3–5 epochs, but training loss continues to decrease gradually afterward,  particularly for ResNet, where the gap between training and validation loss widens through epoch 20. The lower learning rate configurations converge more slowly: the SmallBatch runs (lr=0.0001) are still visibly declining past epoch 15. Validation loss generally stabilises earlier than training loss, and the two track each other reasonably well, with no severe overfitting. The learning rate scheduler reduces the rate in later epochs, visible as small drops in the loss curves. For ResNet, running 30 epochs at lr=0.0005 instead of 20 at lr=0.001 did not improve mAP meaningfully, so the longer runs appear unnecessary.
 
 **Qualitative observations.** Looking at the bounding box visualisations, the model gets the class right most of the time with high confidence (usually 0.97 or above). Predicted boxes are close to the ground truth in most cases. The most common error is a slight mismatch in box size or position, especially for narrow diagonal objects where the aspect ratio is harder to predict. Images with two objects are generally handled well, with each object detected independently in its grid cell. Errors tend to happen when an object is near a cell boundary, where the cell assignment is less clear.
 
