@@ -119,15 +119,17 @@ The task is a multi-output localization problem: given a 48×60 grayscale image,
 
 **Loss function.** A composite localization loss was used with three terms:
 
-- **Detection loss (Lₐ):** Binary cross-entropy with logits on the objectness score `pc`, computed over all samples.
+- **Detection loss (L_a):** Binary cross-entropy with logits on the objectness score `pc`, computed over all samples.
 - **Bounding box loss (L_b):** Mean squared error on the normalized `(cx, cy, w, h)` coordinates, computed only for positive samples (where an object is present).
 - **Classification loss (L_c):** Cross-entropy on the 10-class digit logits, again only for positive samples.
 
-The total loss is `Lₐ + L_b + L_c`.
+The total loss is `L_a + L_b + L_c`.
 
 **Normalization.** Input images were normalized using the training set mean and standard deviation (per-dataset, not per-channel), and the same statistics were applied to validation and test sets.
 
-**Training.** All models were trained with SGD (lr=0.01, momentum=0.9), batch size 64, and early stopping with patience=5, restoring the best checkpoint by validation performance. The performance metric is defined as `0.5 × (accuracy + mean IoU)`, where accuracy counts a prediction as correct only if the object is detected *and* the digit class is correct.
+**Baseline:** The light model with the learning rate of 0.01 and no weight decay is our simplest model and wil act as out baseline
+
+**Training.** All models were trained with SGD (momentum=0.9), batch size 64, and early stopping with patience=5, restoring the best checkpoint by validation performance. The performance metric is defined as `0.5 × (accuracy + mean IoU)`, where accuracy counts a prediction as correct only if the object is detected *and* the digit class is correct. We experimentet with different values on: net depth, net width, learning rate, weight decay, and droupout rates.
 
 **Dataset.** The training set contains 59,400 samples, validation 6,600, and test 11,000. Approximately 9.1% of samples have no object (`pc=0`); the remainder are roughly balanced across digits 0–9, with digit 1 slightly overrepresented (~19%).
 
@@ -156,12 +158,16 @@ The flat feature sizes after the convolutional stack (computed automatically via
 
 ## Results
 
-**Training curves:** Looking at the evolution of the traningloss in our models we can see some developments. The loss always decrease as the model gets trained to fit the data better. We can also se how the learning rate impacts how fast the model changes. When its too high, it causes the loss function to fluctuate, oscillate, or diverge, preventing the model from learning (This never happens to our models). A too low value leads to slow, stagnant learning, increasing training time and requiring more iterations. The models with dropout (deep and wide) should also train more slowly but generalize better. 
+![Training Curves](figures/loss_curves_localization.png)
+
+**Training curves:** Looking at the evolution of the traning loss in our models we can see some developments. The loss always decrease as the model gets trained to fit the data better. We can also se how the learning rate impacts how fast the model changes. When its too high, it causes the loss function to fluctuate, oscillate, or diverge, preventing the model from learning (This never happens to our models). A too low value leads to slow, stagnant learning, increasing training time and requiring more iterations. The models with dropout (deep and wide) should also train more slowly but generalize better. 
 
 
 
+A table for the best versions of our Light, Deep and Wide nets 
 | Model    | Val Accuracy | Val IoU | Val Performance |
 |----------|-------------|---------|-----------------|
+| Baseline | 0.7068      | 0.4193  | 0.5631          | 
 | Light    | 0.7068      | 0.4193  | 0.5631          | 
 | Deep     | 0.9280      | 0.4497  | 0.6838          | 
 | Wide     | 0.8863      | 0.4843  | 0.6953          | 
@@ -169,8 +175,7 @@ The flat feature sizes after the convolutional stack (computed automatically via
 
 
 ### About the best model
-Our best model was a wide network with a learning rate of 0.01, weight decay of 0 and a dropoutlevel of 0.3. Our model has a relativly high learning rate, wich we explained earlier, means that 
-
+Our best model was a wide network with a learning rate of 0.01, weight decay of 0, and a dropout rate of 0.3. The learning rate of 0.01 is a standard, moderate value that allows the training loss to decrease steadily without risking unstable or overshooting updates. Having more neurons means the network can represent more complex functions and capture richer feature interactions. Wider layers increase the hypothesis space, allowing the model to fit more varied patterns in the data. Since we used dropout for regularization, weight decay was set to 0 to avoid over-constraining the model. A dropout rate of 0.3 means that during each training step, 30% of neurons are randomly deactivated. This prevents neurons from becoming too co-dependent and encourages the network to learn more robust, distributed representations improving generalization.
 
 ### Test results 
 
@@ -198,6 +203,9 @@ Our best model was a wide network with a learning rate of 0.01, weight decay of 
 **IoU as a metric.** IoU is only meaningful for positive samples (where an object exists). A model that detects no objects would trivially score zero IoU but achieve high "accuracy" on the no-object class. The composite metric `0.5 × (accuracy + IoU)` balances both concerns, though it still conflates detection and classification into a single accuracy number. Separating precision/recall for detection from digit accuracy would provide a cleaner diagnostic.
 
 **Normalization.** Global normalization (single mean/std over all pixels) was used rather than per-channel normalization. Since images are single-channel, this is equivalent, but using per-feature normalization or 2D spatial normalization could be explored for further improvement.
+
+## Conclution 
+Our final model got a test performance of 0.6869. This is quite good in referance to how our model did on the validation data. We did expect a larger decrease from the validation data to the test data. This small decrease in performance to a new dataset is a sign that our model generalizes well to new data. We might have been able to get even better values if we experimentet with even more hyperparameter values. This was limited by our time and available resources. 
 
 
 ## Part 2: Object detection
