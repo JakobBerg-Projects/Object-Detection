@@ -149,8 +149,8 @@ Four architectures were compared:
 All models use MaxPool2d (2×2) after each conv block and output 15 values (1 + 4 + 10).
 
 The flat feature sizes after the convolutional stack (computed automatically via a dummy forward pass) are:
+- baseline: 1,040
 - Light: 1,040
-- Standard: 1,728
 - Deep: 2,560
 - Wide: 6,912
 
