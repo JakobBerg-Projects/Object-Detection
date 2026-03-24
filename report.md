@@ -392,4 +392,4 @@ The best configuration, ResNetDetector with lr=0.001, no weight decay, batch siz
 
 ## Disclosure of AI
 
-The service ChatGPT and Claude has been used for language editing and or improvements to the text in the report, and for resolving bugs in the training loop. Claude was also used to assist in giving templates for model structures in the Object Detection task. The final result was fact-checked and somewhat rewritten by its authors.
+The service ChatGPT and Claude has been used for language editing and or improvements to the text in the report, and for resolving bugs especially in the training loop but also elsewhere. Claude was also used to assist in giving templates for model structures in the Object Detection task. The final result was fact-checked and somewhat rewritten by its authors.
