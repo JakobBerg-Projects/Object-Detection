@@ -78,7 +78,6 @@ The mild class imbalance (≈7 percentage points) is unlikely to cause significa
 
 ![Sample detection images](figures/sample_images_detection.png)
 
-### Challenges
 ### Preprocessing and Sanity Checks
 
 #### Object localization
@@ -136,7 +135,7 @@ The total loss is `L_a + L_b + L_c`.
 
 **Normalization.** Input images were normalized using the training set mean and standard deviation (per-dataset, not per-channel), and the same statistics were applied to validation and test sets.
 
-**Baseline:** The light model with the learning rate of 0.01 and no weight decay is our simplest model and wil act as out baseline
+**Baseline:** The light model with the learning rate of 0.01 and no weight decay is our simplest model and wil act as our baseline
 
 **Training.** All models were trained with SGD (momentum=0.9), batch size 64, and early stopping with patience=5, restoring the best checkpoint by validation performance. The performance metric is defined as `0.5 × (accuracy + mean IoU)`, where accuracy counts a prediction as correct only if the object is detected *and* the digit class is correct. We experimented with different values on: net depth, net width, learning rate, weight decay, and dropout rates.
 
