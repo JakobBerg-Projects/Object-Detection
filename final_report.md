@@ -178,6 +178,20 @@ A table for the best versions of our Light, Deep and Wide nets
 ### About the best model
 Our best model was a wide network with a learning rate of 0.01, weight decay of 0, and a dropout rate of 0.3. The learning rate of 0.01 is a standard, moderate value that allows the training loss to decrease steadily without risking unstable or overshooting updates. Having more neurons means the network can represent more complex functions and capture richer feature interactions. Wider layers increase the hypothesis space, allowing the model to fit more varied patterns in the data. Since we used dropout for regularization, weight decay was set to 0 to avoid over-constraining the model. A dropout rate of 0.3 means that during each training step, 30% of neurons are randomly deactivated. This prevents neurons from becoming too co-dependent and encourages the network to learn more robust, distributed representations improving generalization.
 
+## Predictions 
+
+### Train Predictions 
+![Predicted Boxes](figures/train_prediction_localization.png)
+
+### Validation Predictions 
+![Predicted Boxes](figures/validation_prediction_localization.png)¨
+
+### Test Predictions 
+![Predicted Boxes](figures/test_prediction_localization.png)
+
+**Bounding box visualizations:** For qualitative assessment, `pred_vs_actual` overlays the ground-truth box (green) and predicted box (red) on the image. Visualizations from train, validation, and test sets illustrate how well the model localizes unseen digits.
+
+
 ### Test results 
 
 | Model    | Test Accuracy | Test IoU | Test Performance |
@@ -185,9 +199,6 @@ Our best model was a wide network with a learning rate of 0.01, weight decay of 
 | **Best** |  0.8878       | 0.4860   | 0.6869          | 
 
 
-![Predicted Boxes](figures/validation_prediction_localization.png)
-
-**Bounding box visualizations:** For qualitative assessment, `pred_vs_actual` overlays the ground-truth box (green) and predicted box (red) on the image. Visualizations from train, validation, and test sets illustrate how well the model localizes unseen digits.
 
 ---
 
