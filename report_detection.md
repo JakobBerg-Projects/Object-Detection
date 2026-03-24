@@ -28,8 +28,8 @@ $$L_{\text{localization}} = L_A + L_B + L_C$$
 
 Three convolutional architectures share the same head design: `AdaptiveAvgPool2d((2, 3))` followed by a `1×1` convolution that produces 7 output channels (one per prediction per grid cell). The final output is reshaped from `(B, 7, 2, 3)` to `(B, 2, 3, 7)` to align with the label tensor layout.
 
-#### FullyConvDetector
-A straightforward four-stage convolutional backbone. Each stage doubles the channel count while halving the spatial resolution via stride-2 convolutions.
+#### FullyConvDetector *(baseline)*
+A straightforward four-stage convolutional backbone and the **baseline model** for this comparison. It uses only standard convolutions with no residual connections or parameter-reduction techniques, making it the reference point against which the other architectures are evaluated. Each stage doubles the channel count while halving the spatial resolution via stride-2 convolutions.
 
 ```
 Input 1×48×60
@@ -89,19 +89,21 @@ All three models are trained under the same four hyperparameter configurations (
 
 | Run | mAP | mAP@50 | mAP@75 |
 |-----|-----|--------|--------|
-| FullyConv — Baseline | 0.3017 | 0.7608 | 0.1516 |
-| FullyConv — +WeightDecay | 0.3313 | 0.7697 | 0.2217 |
-| FullyConv — LowerLR | 0.3014 | 0.7279 | 0.1906 |
-| FullyConv — SmallBatch | 0.2901 | 0.7041 | 0.1670 |
-| ResNet — Baseline | 0.3740 | 0.8344 | 0.2754 |
-| ResNet — +WeightDecay | 0.4804 | 0.9275 | 0.4447 |
-| ResNet — LowerLR | 0.4613 | 0.9094 | 0.4323 |
-| ResNet — SmallBatch | 0.4007 | 0.8949 | 0.2782 |
-| Lightweight — Baseline | 0.3022 | 0.7446 | 0.1606 |
-| Lightweight — +WeightDecay | 0.2973 | 0.7237 | 0.1781 |
-| Lightweight — LowerLR | 0.2782 | 0.7063 | 0.1532 |
-| Lightweight — SmallBatch | 0.2317 | 0.6335 | 0.0921 |
-| **Best model (test set)** | **0.4709** | **0.9165** | **0.4395** |
+| FullyConv — Baseline | 0.3468 | 0.7671 | 0.2647 |
+| FullyConv — +WeightDecay | 0.3696 | 0.8046 | 0.2740 |
+| FullyConv — LowerLR | 0.3183 | 0.7553 | 0.1975 |
+| FullyConv — SmallBatch | 0.3287 | 0.7501 | 0.2326 |
+| **ResNet — Baseline** | **0.5122** | **0.9423** | **0.5257** |
+| ResNet — +WeightDecay | 0.4686 | 0.9253 | 0.4188 |
+| ResNet — LowerLR | 0.4962 | 0.9283 | 0.4926 |
+| ResNet — SmallBatch | 0.4320 | 0.8879 | 0.3660 |
+| Lightweight — Baseline | 0.3228 | 0.7463 | 0.2114 |
+| Lightweight — +WeightDecay | 0.3295 | 0.7509 | 0.2215 |
+| Lightweight — LowerLR | 0.3148 | 0.7277 | 0.2229 |
+| Lightweight — SmallBatch | 0.2528 | 0.6595 | 0.1218 |
+| **Best model — ResNet Baseline (test set)** | **0.5123** | **0.9394** | **0.5145** |
+
+The **best model** is **ResNetDetector with the Baseline hyperparameters** (lr=1e-3, no weight decay, batch size 64, 20 epochs), which achieves the highest validation mAP of 0.5122 across all 12 runs. This model is then re-evaluated on the held-out test set, yielding mAP 0.5123, confirming that the validation score was not inflated by hyperparameter overfitting.
 
 #### Training Curves
 
@@ -130,13 +132,13 @@ Detections are visualised with **green** boxes for ground truth and **red** boxe
 
 ### Discussion
 
-**Architecture comparison.** ResNet clearly outperforms both FullyConv and Lightweight across every configuration. The best ResNet run (mAP 0.48) is about 0.15 mAP higher than the best FullyConv run (mAP 0.33). The residual skip connections help gradients flow more easily during training, which lets the model learn better features with only 128 final channels compared to FullyConv's 256. Lightweight consistently ranks last. Even though depthwise separable convolutions use fewer parameters, the reduced capacity appears to be a real bottleneck when detecting small objects in noisy images. The parameter savings do not result in a useful speed vs. accuracy trade-off here.
+**Architecture comparison.** FullyConvDetector serves as the baseline, providing a simple reference without residual connections or depthwise separable convolutions. ResNet clearly outperforms both the baseline and Lightweight across every configuration. The best ResNet run (mAP 0.51) is about 0.14 mAP higher than the best FullyConv baseline run (mAP 0.37). The residual skip connections help gradients flow more easily during training, which lets the model learn better features with only 128 final channels compared to FullyConv's 256. Lightweight consistently ranks last. Even though depthwise separable convolutions use fewer parameters, the reduced capacity appears to be a real bottleneck when detecting small objects in noisy images. The parameter savings do not result in a useful speed vs. accuracy trade-off here.
 
-**Effect of weight decay and learning rate.** Weight decay has the strongest effect on performance. Removing it from the best ResNet configuration (lr=0.001) drops mAP from 0.48 to 0.37. This drop is larger than any gain from changing the learning rate, which suggests the model overfits somewhat without regularisation. Among learning rates, 0.001 works best for ResNet. Reducing to 0.0005 costs about 0.02 mAP, and 0.0001 with a smaller batch costs about 0.08 mAP. The low learning rate likely does not converge fully in 20 epochs, and extending to 30 epochs does not close the gap.
+**Effect of weight decay and learning rate.** The best ResNet configuration (lr=0.001, no weight decay) achieves mAP 0.51, while adding weight decay (1e-4) drops it to 0.47. This suggests the model is not overfitting significantly with these dataset sizes, and the regularisation may be slightly too aggressive. For FullyConv and Lightweight, weight decay gives a small improvement, indicating these simpler architectures benefit more from regularisation. Among learning rates, 0.001 works best for ResNet. Reducing to 0.0005 with longer training (30 epochs) gives a competitive mAP of 0.50, while 0.0001 with a smaller batch drops to 0.43. The low learning rate likely does not converge fully in 20 epochs, and extending to 30 epochs does not close the gap.
 
-**mAP@50 vs. mAP@75.** All models score much higher on mAP@50 than mAP@75 (for example, 0.93 vs. 0.44 for the best run). This means the models reliably find objects and predict the correct class, but their bounding boxes are not very precise. This is expected because the 2x3 output grid is quite coarse: each cell covers roughly 30x24 pixels of the 60x48 image, so fine-grained box regression within a cell is difficult. Improving localisation precision would likely require a finer grid or anchor-based predictions.
+**mAP@50 vs. mAP@75.** All models score much higher on mAP@50 than mAP@75 (for example, 0.94 vs. 0.53 for the best run). This means the models reliably find objects and predict the correct class, but their bounding boxes are not very precise. This is expected because the 2x3 output grid is quite coarse: each cell covers roughly 30x24 pixels of the 60x48 image, so fine-grained box regression within a cell is difficult. Improving localisation precision would likely require a finer grid or anchor-based predictions.
 
-**Training dynamics.** All models converge quickly within the first 5 epochs. Training and validation loss track each other closely throughout, with no clear overfitting. The dataset of roughly 27K training images is large enough relative to model size. The learning rate scheduler reduces the rate in later epochs, which can be seen as small drops in the loss curves. For ResNet, running 30 epochs instead of 20 did not improve mAP meaningfully, so the longer runs appear unnecessary.
+**Training dynamics.** Models with lr=0.001 show the steepest loss reduction in the first 3–5 epochs, but training loss continues to decrease gradually afterward — particularly for ResNet, where the gap between training and validation loss widens through epoch 20. The lower learning rate configurations converge more slowly: the SmallBatch runs (lr=0.0001) are still visibly declining past epoch 15. Validation loss generally stabilises earlier than training loss, and the two track each other reasonably well, with no severe overfitting. The learning rate scheduler reduces the rate in later epochs, visible as small drops in the loss curves. For ResNet, running 30 epochs at lr=0.0005 instead of 20 at lr=0.001 did not improve mAP meaningfully, so the longer runs appear unnecessary.
 
 **Qualitative observations.** Looking at the bounding box visualisations, the model gets the class right most of the time with high confidence (usually 0.97 or above). Predicted boxes are close to the ground truth in most cases. The most common error is a slight mismatch in box size or position, especially for narrow diagonal objects where the aspect ratio is harder to predict. Images with two objects are generally handled well, with each object detected independently in its grid cell. Errors tend to happen when an object is near a cell boundary, where the cell assignment is less clear.
 
@@ -146,4 +148,4 @@ Detections are visualised with **green** boxes for ground truth and **red** boxe
 
 ## Conclusion
 
-The best configuration, ResNetDetector with lr=0.001, weight decay 1e-4, batch size 64, and 20 epochs, achieves mAP 0.47, mAP@50 0.92, and mAP@75 0.44 on the held-out test set. This is very close to the validation performance (mAP 0.48), showing the model generalises well. The main findings are: residual connections give the largest improvement in architecture choice; weight decay is the most important regularisation setting; and the high mAP@50 shows the model detects and classifies reliably, while the lower mAP@75 shows that tighter bounding box precision is the main remaining weakness, limited by the coarse 2x3 output grid.
+The best configuration, ResNetDetector with lr=0.001, no weight decay, batch size 64, and 20 epochs, achieves mAP 0.51, mAP@50 0.94, and mAP@75 0.51 on the held-out test set. This is very close to the validation performance (mAP 0.51), showing the model generalises well. The main findings are: residual connections give the largest improvement in architecture choice; a learning rate of 0.001 is the most important hyperparameter for strong performance; and the high mAP@50 shows the model detects and classifies reliably, while the lower mAP@75 shows that tighter bounding box precision is the main remaining weakness, limited by the coarse 2x3 output grid.
