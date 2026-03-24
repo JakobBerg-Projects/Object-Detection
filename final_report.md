@@ -169,14 +169,14 @@ The flat feature sizes after the convolutional stack (computed automatically via
 
 
 ### About the best model
-Our best model was a wide network with a learning rate of 0.01 and weight decay of 0. 
+Our best model was a wide network with a learning rate of 0.01, weight decay of 0 and a dropoutlevel of 0.3. Our model has a relativly high learning rate, wich we explained earlier, means that 
 
 
 ### Test results 
 
-| Model    | Val Accuracy | Val IoU | Val Performance |
-|----------|-------------|---------|-----------------|
-| **Best** |  0.8878     | 0.4860  | 0.6869          | 
+| Model    | Test Accuracy | Test IoU | Test Performance |
+|----------|---------------|----------|-----------------|
+| **Best** |  0.8878       | 0.4860   | 0.6869          | 
 
 
 ![Predicted Boxes](figures/validation_prediction_localization.png)
